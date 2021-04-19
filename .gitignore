@@ -13,4 +13,4 @@
 .externalNativeBuild
 .cxx
 /build
-#google-services.json
+google-services.json
