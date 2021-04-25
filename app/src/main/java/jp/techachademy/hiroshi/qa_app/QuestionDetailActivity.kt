@@ -7,11 +7,44 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import kotlinx.android.synthetic.main.activity_question_detail.*
 
-class QuestionDetailActivity : AppCompatActivity() {
+class QuestionDetailActivity : AppCompatActivity(),Callback {
 
     private lateinit var mQuestion: Question
     private lateinit var mAdapter: QuestionDetailListAdapter
     private lateinit var mAnswerRef: DatabaseReference
+
+
+    val user = FirebaseAuth.getInstance().currentUser
+
+    private val mFavoriteEventListener = object : ChildEventListener {
+
+
+        override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
+            val map = dataSnapshot.value as Map<*, *>
+
+            val favoriteUid = dataSnapshot.key ?: ""
+
+            mAdapter.isFavorite = favoriteUid != ""
+
+            mAdapter.notifyDataSetChanged()
+        }
+
+        override fun onChildChanged(dataSnapshot: DataSnapshot, s: String?) {
+
+        }
+
+        override fun onChildRemoved(dataSnapshot: DataSnapshot) {
+
+        }
+
+        override fun onChildMoved(dataSnapshot: DataSnapshot, s: String?) {
+
+        }
+
+        override fun onCancelled(databaseError: DatabaseError) {
+
+        }
+    }
 
     private val mEventListener = object : ChildEventListener {
         override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
@@ -56,6 +89,7 @@ class QuestionDetailActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_question_detail)
 
+
         // 渡ってきたQuestionのオブジェクトを保持する
         val extras = intent.extras
         mQuestion = extras!!.get("question") as Question
@@ -69,7 +103,7 @@ class QuestionDetailActivity : AppCompatActivity() {
 
         fab.setOnClickListener {
             // ログイン済みのユーザーを取得する
-            val user = FirebaseAuth.getInstance().currentUser
+
 
             if (user == null) {
                 // ログインしていなければログイン画面に遷移させる
@@ -84,9 +118,25 @@ class QuestionDetailActivity : AppCompatActivity() {
                 // --- ここまで ---
             }
         }
-
         val dataBaseReference = FirebaseDatabase.getInstance().reference
         mAnswerRef = dataBaseReference.child(ContentsPATH).child(mQuestion.genre.toString()).child(mQuestion.questionUid).child(AnswersPATH)
         mAnswerRef.addChildEventListener(mEventListener)
+        if (user != null) {
+            dataBaseReference.child("Favorite").child(user.uid).child(mQuestion.questionUid).addChildEventListener(mFavoriteEventListener)
+        }
+    }
+
+    override fun onAddFavorite(mQuestion: Question) {
+        val dataBaseReference = FirebaseDatabase.getInstance().reference
+        if (user != null) {
+            dataBaseReference.child("Favorite").child(user.uid).child(mQuestion.questionUid).setValue(mQuestion)
+        }
+    }
+
+    override fun onDeleteFavorite(id: String) {
+        val dataBaseReference = FirebaseDatabase.getInstance().reference
+        if (user != null) {
+            dataBaseReference.child("Favorite").child(user.uid).child(mQuestion.questionUid).removeValue()
+        }
     }
 }

@@ -13,6 +13,8 @@ import android.widget.TextView
 import kotlinx.android.synthetic.main.list_questions.view.*
 
 class QuestionsListAdapter(context: Context) : BaseAdapter() {
+
+
     private var mLayoutInflater: LayoutInflater
     private var mQuestionArrayList = ArrayList<Question>()
 
