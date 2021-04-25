@@ -26,9 +26,9 @@ class QuestionDetailListAdapter(context: Context, private val mQustion: Question
     }
 
     // 一覧画面から登録するときのコールバック（FavoriteFragmentへ通知するメソッド)
-    var onClickAddFavorite: ((Question) -> Unit)? = null
+    var onClickAddFavorite: (() -> Unit)? = null
     // 一覧画面から削除するときのコールバック（ApiFragmentへ通知するメソッド)
-    var onClickDeleteFavorite: ((String) -> Unit)? = null
+    var onClickDeleteFavorite: (() -> Unit)? = null
 
     var isFavorite: Boolean = false
     val user = FirebaseAuth.getInstance().currentUser
@@ -92,9 +92,9 @@ class QuestionDetailListAdapter(context: Context, private val mQustion: Question
 
             favoriteButton.setOnClickListener {
                 if (isFavorite) {
-                    onClickDeleteFavorite?.invoke(questionId)
+                    onClickDeleteFavorite
                 } else {
-                    onClickAddFavorite?.invoke(mQustion)
+                    onClickAddFavorite
                 }
             }
 

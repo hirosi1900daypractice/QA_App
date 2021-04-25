@@ -7,7 +7,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import kotlinx.android.synthetic.main.activity_question_detail.*
 
-class QuestionDetailActivity : AppCompatActivity(),Callback {
+class QuestionDetailActivity : AppCompatActivity() {
 
     private lateinit var mQuestion: Question
     private lateinit var mAdapter: QuestionDetailListAdapter
@@ -90,6 +90,7 @@ class QuestionDetailActivity : AppCompatActivity(),Callback {
         setContentView(R.layout.activity_question_detail)
 
 
+
         // 渡ってきたQuestionのオブジェクトを保持する
         val extras = intent.extras
         mQuestion = extras!!.get("question") as Question
@@ -101,6 +102,28 @@ class QuestionDetailActivity : AppCompatActivity(),Callback {
         listView.adapter = mAdapter
         mAdapter.notifyDataSetChanged()
 
+        mAdapter.apply {
+            onClickDeleteFavorite = {
+                val dataBaseReference = FirebaseDatabase.getInstance().reference
+                if (user != null) {
+                    dataBaseReference.child("Favorite").child(user.uid).child(mQuestion.questionUid).removeValue()
+                }
+            }
+            onClickAddFavorite = {
+                val dataBaseReference = FirebaseDatabase.getInstance().reference
+                if (user != null) {
+                    val title = mQuestion.title
+                    val body = mQuestion.body
+                    val name = mQuestion.name
+                    val uid = mQuestion.uid
+                    val questionUid = mQuestion.questionUid
+                    val genre = mQuestion.genre
+                    val QuestionArray = Favorite(title,body,name,uid,questionUid,genre)
+                    dataBaseReference.child("Favorite").child(user.uid).child(mQuestion.questionUid).setValue(QuestionArray)
+                }
+            }
+
+        }
         fab.setOnClickListener {
             // ログイン済みのユーザーを取得する
 
@@ -126,17 +149,13 @@ class QuestionDetailActivity : AppCompatActivity(),Callback {
         }
     }
 
-    override fun onAddFavorite(mQuestion: Question) {
-        val dataBaseReference = FirebaseDatabase.getInstance().reference
-        if (user != null) {
-            dataBaseReference.child("Favorite").child(user.uid).child(mQuestion.questionUid).setValue(mQuestion)
-        }
-    }
 
-    override fun onDeleteFavorite(id: String) {
-        val dataBaseReference = FirebaseDatabase.getInstance().reference
-        if (user != null) {
-            dataBaseReference.child("Favorite").child(user.uid).child(mQuestion.questionUid).removeValue()
-        }
-    }
+
+//    override fun onAddFavorite(mQuestion: Question) {
+//
+//    }
+//
+//    override fun onDeleteFavorite(id: String) {
+//
+//    }
 }

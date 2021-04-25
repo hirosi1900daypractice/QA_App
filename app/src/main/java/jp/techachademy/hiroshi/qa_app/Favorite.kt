@@ -6,5 +6,5 @@ import java.util.ArrayList
 
 
 
-class Favorite(val questionId: String) : Serializable, Application() {
+class Favorite(val title: String, val body: String, val name: String, val uid: String, val questionUid: String, val genre: Int) : Application() {
 }
