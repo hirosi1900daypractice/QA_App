@@ -26,7 +26,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var mDatabaseReference: DatabaseReference
     private lateinit var mQuestionArrayList: ArrayList<Question>
     private lateinit var mAdapter: QuestionsListAdapter
-
     private var mGenreRef: DatabaseReference? = null
 
     private val mEventListener = object : ChildEventListener {
@@ -36,7 +35,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             val body = map["body"] ?: ""
             val name = map["name"] ?: ""
             val uid = map["uid"] ?: ""
-            val imageString = map["image"] ?: ""
+            val imageString = (map["image"] ?: "") as String
             val bytes =
                 if (imageString.isNotEmpty()) {
                     Base64.decode(imageString, Base64.DEFAULT)
@@ -57,8 +56,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 }
             }
 
-            val question = Question(title, body, name, uid, dataSnapshot.key ?: "",
-                mGenre, bytes, answerArrayList)
+            val question = Question(
+                title, body, name, uid, dataSnapshot.key ?: "",
+                mGenre, bytes, answerArrayList
+            )
             mQuestionArrayList.add(question)
             mAdapter.notifyDataSetChanged()
         }
@@ -82,15 +83,52 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             question.answers.add(answer)
                         }
                     }
-
                     mAdapter.notifyDataSetChanged()
                 }
             }
         }
 
-        override fun onChildRemoved(p0: DataSnapshot) {
+        override fun onChildRemoved(dataSnapshot: DataSnapshot) {
 
         }
+
+        override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
+            TODO("Not yet implemented")
+        }
+
+        override fun onCancelled(error: DatabaseError) {
+            TODO("Not yet implemented")
+        }
+
+    }
+
+    private val mEventListenerFavorite = object : ChildEventListener {
+            override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
+                val map = dataSnapshot.value as Map<String, Any>
+                val genre = map["genre"].toString() ?: ""
+                val questionId = map["questionUid"].toString() ?: ""
+                    mDatabaseReference.child(ContentsPATH).child(genre).child(questionId)
+                    .addChildEventListener(mEventListener)
+            }
+
+            override fun onChildChanged(dataSnapshot: DataSnapshot, s: String?) {
+
+            }
+
+
+            override fun onChildRemoved(dataSnapshot: DataSnapshot) {
+            // 変更があったQuestionを探す
+                mQuestionArrayList.clear()
+                for (question in mQuestionArrayList) {
+                    if (dataSnapshot.key.equals(question.questionUid)) {
+                        continue
+                    }
+                    mQuestionArrayList.add(question)
+                }
+                mAdapter.notifyDataSetChanged()
+
+
+            }
 
         override fun onChildMoved(p0: DataSnapshot, p1: String?) {
 
@@ -197,6 +235,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         } else if (id == R.id.nav_compter) {
             toolbar.title = getString(R.string.menu_compter_label)
             mGenre = 4
+        } else if (id == R.id.nav_favorite) {
+            toolbar.title = "お気に入り"
+            mGenre = 5
         }
 
         drawer_layout.closeDrawer(GravityCompat.START)
@@ -211,11 +252,18 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         if (mGenreRef != null) {
             mGenreRef!!.removeEventListener(mEventListener)
         }
+        if (mGenre == 5) {
+            val user = FirebaseAuth.getInstance().currentUser
+            if (user != null) {
+                mGenreRef = mDatabaseReference.child("Favorite").child(user.uid)
+                mGenreRef!!.addChildEventListener(mEventListenerFavorite)
+                return true
+            }
+        }
         mGenreRef = mDatabaseReference.child(ContentsPATH).child(mGenre.toString())
         mGenreRef!!.addChildEventListener(mEventListener)
-
         return true
-        // --- ここまで追加する ---
+
     }
 
 }

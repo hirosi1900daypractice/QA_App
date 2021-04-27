@@ -4,6 +4,7 @@ import android.content.Intent
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import com.google.firebase.auth.FirebaseAuth
@@ -122,9 +123,8 @@ class QuestionDetailActivity : AppCompatActivity() {
         }
 
         if (isFavorite) {
-            favoriteButton.apply {
-                setBackgroundColor(Color.rgb(100, 0, 0))
-            }
+            favoriteButton.setBackgroundColor(Color.rgb(100, 0, 0))
+
         }else {
             favoriteButton.setBackgroundColor(Color.rgb(0, 0, 100))
         }
@@ -158,15 +158,18 @@ class QuestionDetailActivity : AppCompatActivity() {
     private fun onClickAddFavorite(mQuestion: Question){
         val dataBaseReference = FirebaseDatabase.getInstance().reference
         if (user != null) {
-            val title = mQuestion.title
+            val title: String = mQuestion.title
             val body = mQuestion.body
             val name = mQuestion.name
-            val uid = mQuestion.uid
-            val questionUid = mQuestion.questionUid
+            val uid: String = mQuestion.uid
+            val questionUid: String = mQuestion.questionUid
             val genre = mQuestion.genre
-            var QuestionArray = Favorite(title,body,name,uid,questionUid,genre)
+            val answer = mQuestion.answers
+            var QuestionArray = mapOf("uid" to uid, "questionUid" to  questionUid, "genre" to genre)
             mFavoriteRef = dataBaseReference.child("Favorite").child(user.uid).child(mQuestion.questionUid)
             mFavoriteRef.setValue(QuestionArray)
+            Log.d("確認", "確認")
+            isFavorite =true
         }
     }
     private fun onClickDeleteFavorite(mQuestion: Question){
@@ -174,6 +177,7 @@ class QuestionDetailActivity : AppCompatActivity() {
         if (user != null) {
             mFavoriteRef = dataBaseReference.child("Favorite").child(user.uid).child(mQuestion.questionUid)
             mFavoriteRef.removeValue()
+            isFavorite = false
         }
     }
 
