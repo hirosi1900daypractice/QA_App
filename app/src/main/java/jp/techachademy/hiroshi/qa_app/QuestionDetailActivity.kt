@@ -92,18 +92,21 @@ class QuestionDetailActivity : AppCompatActivity() {
 
                 if (isFavorite) {
                     favoriteButton.setBackgroundColor(Color.rgb(100, 0, 0))
-
+                    favoriteButton.text = "お気に入りを解除する"
                 }else {
                     favoriteButton.setBackgroundColor(Color.rgb(0, 0, 100))
+                    favoriteButton.text = "お気に入りをする"
                 }
 
                 favoriteButton.setOnClickListener {
                     if (isFavorite) {
                         onClickDeleteFavorite(mQuestion)
                         favoriteButton.setBackgroundColor(Color.rgb(0, 0, 100))
+                        favoriteButton.text = "お気に入りをする"
                     } else {
                         onClickAddFavorite(mQuestion)
                         favoriteButton.setBackgroundColor(Color.rgb(100, 0, 0))
+                        favoriteButton.text = "お気に入りを解除する"
                     }
                 }
 
