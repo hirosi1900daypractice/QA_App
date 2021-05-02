@@ -19,36 +19,10 @@ class QuestionDetailActivity : AppCompatActivity() {
     private lateinit var mFavoriteRef: DatabaseReference
 
 
-    var isFavorite: Boolean = false
+    private var isFavorite: Boolean = false
+
     val user = FirebaseAuth.getInstance().currentUser
 
-    private val mFavoriteEventListener = object : ChildEventListener {
-
-
-        override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
-
-            val favoriteUid = dataSnapshot.key ?: ""
-
-            isFavorite = favoriteUid != ""
-
-        }
-
-        override fun onChildChanged(dataSnapshot: DataSnapshot, s: String?) {
-
-        }
-
-        override fun onChildRemoved(dataSnapshot: DataSnapshot) {
-
-        }
-
-        override fun onChildMoved(dataSnapshot: DataSnapshot, s: String?) {
-
-        }
-
-        override fun onCancelled(databaseError: DatabaseError) {
-
-        }
-    }
 
     private val mEventListener = object : ChildEventListener {
         override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
@@ -101,12 +75,44 @@ class QuestionDetailActivity : AppCompatActivity() {
 
         title = mQuestion.title
 
+        var uid = mQuestion.uid
+        var questionId = mQuestion.questionUid
         // ListViewの準備
         mAdapter = QuestionDetailListAdapter(this, mQuestion)
         listView.adapter = mAdapter
         mAdapter.notifyDataSetChanged()
 
         val favoriteButton = favoriteButton as Button
+        val dataBaseReference = FirebaseDatabase.getInstance().reference
+        dataBaseReference.child("Favorite").child(uid).child(questionId).addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                isFavorite = snapshot.value != null
+                Log.d("お気に入り確認","${isFavorite}")
+                Log.d("お気に入りsnapshot","${snapshot}")
+
+                if (isFavorite) {
+                    favoriteButton.setBackgroundColor(Color.rgb(100, 0, 0))
+
+                }else {
+                    favoriteButton.setBackgroundColor(Color.rgb(0, 0, 100))
+                }
+
+                favoriteButton.setOnClickListener {
+                    if (isFavorite) {
+                        onClickDeleteFavorite(mQuestion)
+                        favoriteButton.setBackgroundColor(Color.rgb(0, 0, 100))
+                    } else {
+                        onClickAddFavorite(mQuestion)
+                        favoriteButton.setBackgroundColor(Color.rgb(100, 0, 0))
+                    }
+                }
+
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                TODO("Not yet implemented")
+            }
+        })
 
         if (user == null){
             favoriteButton.setVisibility(View.GONE)
@@ -114,20 +120,11 @@ class QuestionDetailActivity : AppCompatActivity() {
             favoriteButton.setVisibility(View.VISIBLE)
         }
 
-        favoriteButton.setOnClickListener {
-            if (isFavorite) {
-                onClickDeleteFavorite(mQuestion)
-            } else {
-                onClickAddFavorite(mQuestion)
-            }
-        }
 
-        if (isFavorite) {
-            favoriteButton.setBackgroundColor(Color.rgb(100, 0, 0))
+        Log.d("お気に入り確認isFavorite","${isFavorite}")
 
-        }else {
-            favoriteButton.setBackgroundColor(Color.rgb(0, 0, 100))
-        }
+
+
 
 
         fab.setOnClickListener {
@@ -147,12 +144,18 @@ class QuestionDetailActivity : AppCompatActivity() {
                 // --- ここまで ---
             }
         }
-        val dataBaseReference = FirebaseDatabase.getInstance().reference
+
         mAnswerRef = dataBaseReference.child(ContentsPATH).child(mQuestion.genre.toString()).child(mQuestion.questionUid).child(AnswersPATH)
         mAnswerRef.addChildEventListener(mEventListener)
-        if (user != null) {
-            dataBaseReference.child("Favorite").child(user.uid).child(mQuestion.questionUid).addChildEventListener(mFavoriteEventListener)
-        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+
+
+
+
     }
 
     private fun onClickAddFavorite(mQuestion: Question){
@@ -161,8 +164,8 @@ class QuestionDetailActivity : AppCompatActivity() {
             val title: String = mQuestion.title
             val body = mQuestion.body
             val name = mQuestion.name
-            val uid: String = mQuestion.uid
-            val questionUid: String = mQuestion.questionUid
+            val uid = mQuestion.uid as String
+            val questionUid = mQuestion.questionUid as String
             val genre = mQuestion.genre
             val answer = mQuestion.answers
             var QuestionArray = mapOf("uid" to uid, "questionUid" to  questionUid, "genre" to genre)
@@ -180,7 +183,5 @@ class QuestionDetailActivity : AppCompatActivity() {
             isFavorite = false
         }
     }
-
-
 
 }

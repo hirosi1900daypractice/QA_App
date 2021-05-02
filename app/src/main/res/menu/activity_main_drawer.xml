@@ -17,6 +17,6 @@
             android:title="@string/menu_compter_label"/>
         <item
             android:id="@+id/nav_favorite"
-            android:title="@string/menu_favorite_label"/>
+            android:title="@string/menu_favorite_label" />
     </group>
 </menu>
